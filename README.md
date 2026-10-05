@@ -21,7 +21,7 @@ With JDK 25 installed, run:
 ```
 
 The `26.1` source target builds against Minecraft 26.1.2. Jars are collected in
-`build/libs/0.3.1`. Builds include bytecode checks for mixin targets, shadowed
+`build/libs/0.3.2`. Builds include bytecode checks for mixin targets, shadowed
 members, and injection points against the official dependencies. These checks
 do not replace testing the features in a running game.
 
@@ -62,7 +62,11 @@ that fork's commit history and bundled Athen beta binaries were not imported.
 * Auto experiments
 * Etherwarp helper: left click etherwarp
 * Fishing helper
-* Trevor helper: auto call, auto accept, and pelt esp
+* Trevor helper: auto call, auto accept, and animal ESP with nametag fallback.
+  Loaded animals are tracked even when their bodies are invisible or culled.
+  If only a matching Trapper nametag is loaded, its position is used instead.
+  Nearby matching animals and nametags share one marker and one tracer.
+  The **Nametag fallback** switch is enabled by default under Trevor helper.
 * Wardrobe helper: auto close, auto equip, and auto equip while moving
 
 ### Kuudra

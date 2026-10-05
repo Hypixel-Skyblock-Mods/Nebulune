@@ -17,6 +17,7 @@ import foo.starred.athen.config.theme.impl.catppuccin.MochaColorScheme
 import foo.starred.athen.utils.render.renderBoundingBox
 import foo.starred.athen.utils.render.renderPos
 import foo.starred.nebulune.utils.extractTracer
+import foo.starred.snowbird.api.level
 import foo.starred.snowbird.api.command
 import foo.starred.snowbird.api.text.parser.impl.parse
 import foo.starred.snowbird.api.scheduling.scheduler.extensions.clientTicks as client
@@ -25,12 +26,16 @@ import foo.starred.snowbird.utils.stripped
 import foo.starred.snowbird.utils.toDurationFromMillis
 import net.minecraft.network.chat.ClickEvent
 import net.minecraft.world.entity.LivingEntity
+import net.minecraft.world.entity.Entity
+import net.minecraft.world.entity.Display
+import net.minecraft.world.entity.decoration.ArmorStand
 import net.minecraft.world.entity.animal.chicken.Chicken
 import net.minecraft.world.entity.animal.cow.Cow
 import net.minecraft.world.entity.animal.equine.Horse
 import net.minecraft.world.entity.animal.pig.Pig
 import net.minecraft.world.entity.animal.rabbit.Rabbit
 import net.minecraft.world.entity.animal.sheep.Sheep
+import net.minecraft.world.phys.AABB
 import tech.thatgravyboat.skyblockapi.api.data.MayorCandidates
 import tech.thatgravyboat.skyblockapi.utils.extentions.serverMaxHealth
 import tech.thatgravyboat.skyblockapi.utils.regex.RegexUtils.findThenNull
@@ -46,6 +51,7 @@ object TrevorHelper : Module(
     Category.GENERAL
 ) {
     private val mobEsp by config.switch("Animal ESP")
+    private val nametagFallback by config.switch("Nametag fallback", true)
     private val `esp$tracer` by config.switch("Show tracer")
 
     private val autoCall by config.switch("Auto call")
@@ -71,7 +77,11 @@ object TrevorHelper : Module(
     private val `color$endangered` by colors.colorPicker("Endangered color", MochaColorScheme.Mauve.argb)
     private val `color$elusive` by colors.colorPicker("Elusive color", MochaColorScheme.Yellow.argb)
 
-    private val animals = setOf(Cow::class, Pig::class, Sheep::class, Chicken::class, Rabbit::class, Horse::class)
+    private val animals = mapOf(
+        Cow::class to TrevorEspTargets.Species.Cow, Pig::class to TrevorEspTargets.Species.Pig,
+        Sheep::class to TrevorEspTargets.Species.Sheep, Chicken::class to TrevorEspTargets.Species.Chicken,
+        Rabbit::class to TrevorEspTargets.Species.Rabbit, Horse::class to TrevorEspTargets.Species.Horse,
+    )
     private val startRegex = Regex("\\[NPC] Trevor: You can find your (?<type>\\w+) animal near the .*")
 
     private var cooldown: Long = 0
@@ -82,18 +92,40 @@ object TrevorHelper : Module(
             reset()
         }
 
-        on<WorldRenderEvent.Entity> {
+        on<WorldRenderEvent.Extract> {
             if (!mobEsp) return@on
 
             val rarity = rarity ?: return@on
-            val entity = entity as? LivingEntity ?: return@on
-            if (entity::class !in animals) return@on
-
-            val max = if (entity is Horse) entity.serverMaxHealth / 2f else entity.serverMaxHealth
-            if (max != rarity.hp) return@on
-
-            extractFrameBox(entity.renderBoundingBox, rarity.color, depth = false)
-            if (`esp$tracer`) extractTracer(entity.renderPos, rarity.color)
+            val world = level ?: return@on
+            val bodies = mutableListOf<TrevorEspTargets.Candidate<Entity>>()
+            val tags = mutableListOf<TrevorEspTargets.Candidate<Entity>>()
+            // Scan loaded entities independently of vanilla's body render/culling callbacks.
+            for (entity in world.entitiesForRendering()) {
+                if (!entity.isAlive) continue
+                val species = animals[entity::class]
+                if (species != null && entity is LivingEntity) {
+                    val max = if (entity is Horse) entity.serverMaxHealth / 2f else entity.serverMaxHealth
+                    if (max == rarity.hp) bodies.add(candidate(entity, species))
+                } else if (nametagFallback) {
+                    val name = when (entity) {
+                        is ArmorStand -> entity.customName?.string
+                        is Display.TextDisplay -> entity.text.string
+                        else -> null
+                    } ?: continue
+                    val tagSpecies = TrevorEspTargets.nametagSpecies(name, rarity.name) ?: continue
+                    tags.add(candidate(entity, tagSpecies))
+                }
+            }
+            for (target in TrevorEspTargets.select(bodies, tags)) {
+                val entity = target.value
+                val pos = entity.renderPos
+                val box = if (entity is ArmorStand || entity is Display.TextDisplay) {
+                    // A marker stand can have a zero-sized bounding box; give the fallback a visible box.
+                    AABB(pos.x - 0.4, pos.y, pos.z - 0.4, pos.x + 0.4, pos.y + 0.75, pos.z + 0.4)
+                } else entity.renderBoundingBox
+                extractFrameBox(box, rarity.color, depth = false)
+                if (`esp$tracer`) extractTracer(pos, rarity.color)
+            }
         }
 
         on<MessageEvent.Chat.Receive> {
@@ -132,6 +164,9 @@ object TrevorHelper : Module(
         rarity = null
     }
 
+    private fun candidate(entity: Entity, species: TrevorEspTargets.Species) =
+        TrevorEspTargets.Candidate(entity, species, entity.x, entity.y, entity.z)
+
     private enum class Rarity(val normal: Float, val derpy: Float) {
         Trackable(100f, 200f),
         Untrackable(500f, 1000f),
@@ -152,7 +187,7 @@ object TrevorHelper : Module(
             }
 
         companion object {
-            fun get(a: String): Rarity? = entries.find { it.name.uppercase() == a }
+            fun get(a: String): Rarity? = entries.find { it.name.equals(a, ignoreCase = true) }
         }
     }
 }

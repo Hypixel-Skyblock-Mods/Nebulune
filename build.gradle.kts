@@ -68,9 +68,32 @@ dependencies {
     testImplementation("org.ow2.asm:asm-tree:9.9")
 }
 
+val smoke = sourceSets.create("smoke") {
+    java.setSrcDirs(listOf(rootProject.file("src/smoke/java")))
+    resources.setSrcDirs(listOf(rootProject.file("src/smoke/resources")))
+    compileClasspath += sourceSets["main"].output + sourceSets["main"].compileClasspath
+    runtimeClasspath += sourceSets["main"].runtimeClasspath
+}
+tasks.named<ProcessResources>("processSmokeResources") {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 loom {
     fabricModJsonPath = rootProject.file("src/main/resources/fabric.mod.json")
     accessWidenerPath = rootProject.file("src/main/resources/$modId.accesswidener")
+    mods {
+        register("nebulune") { sourceSet(sourceSets["main"]) }
+        register("nebulune_smoke") { sourceSet(smoke) }
+    }
+    runs {
+        register("smoke") {
+            client()
+            source(smoke)
+            runDir("run/smoke")
+            ideConfigGenerated(false)
+            vmArg("-Dnebulune.smoke=true")
+        }
+    }
 
     runConfigs.named("client") {
         generateRunConfig = true

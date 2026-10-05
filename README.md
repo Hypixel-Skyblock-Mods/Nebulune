@@ -25,6 +25,15 @@ The `26.1` source target builds against Minecraft 26.1.2. Jars are collected in
 members, and injection points against the official dependencies. These checks
 do not replace testing the features in a running game.
 
+To verify that Fabric actually applies all eight production mixins:
+
+```sh
+./gradlew :26.1:runSmoke :26.2:runSmoke :26.3:runSmoke
+```
+
+These development checks load the target classes and verify injected methods
+before exiting. They require no login and do not start gameplay.
+
 ## Maintenance
 
 This fork removes inherited GitHub Actions workflows and publishes releases

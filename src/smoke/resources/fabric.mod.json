@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "nebulune_smoke",
+  "version": "1.0.0",
+  "name": "Nebulune development mixin checks",
+  "environment": "client",
+  "entrypoints": {
+    "preLaunch": ["foo.starred.nebulune.smoke.FabricSmoke"]
+  },
+  "depends": {"nebulune": "*", "athen": "0.3.5"}
+}

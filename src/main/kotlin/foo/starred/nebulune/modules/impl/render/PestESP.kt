@@ -2,19 +2,19 @@ package foo.starred.nebulune.modules.impl.render
 
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.annotations.OnlyIn
-import foo.starred.athen.api.location.SkyBlockIsland
-import foo.starred.athen.api.rendering.level.impl.extensions.impl.extractFrameBox
+import foo.starred.athen.api.location.island.impl.PresetSkyBlockIsland as SkyBlockIsland
+import foo.starred.parallax.api.primitives.ParallaxBox.frame as extractFrameBox
 import foo.starred.athen.api.scheduling.Scheduler
-import foo.starred.athen.config.Category
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.events.LocationEvent
 import foo.starred.athen.events.PacketEvent
 import foo.starred.athen.events.WorldRenderEvent
 import foo.starred.athen.modules.Module
-import foo.starred.athen.ui.themes.Catppuccin
+import foo.starred.athen.config.theme.impl.catppuccin.MochaColorScheme
 import foo.starred.athen.utils.render.renderPos
 import foo.starred.nebulune.utils.extractTracer
 import foo.starred.snowbird.api.level
-import foo.starred.snowbird.handlers.time.client
+import foo.starred.snowbird.api.scheduling.scheduler.extensions.clientTicks as client
 import net.minecraft.network.protocol.game.ClientboundSetEntityDataPacket
 import net.minecraft.world.entity.Entity
 import net.minecraft.world.entity.EquipmentSlot
@@ -32,7 +32,7 @@ object PestESP : Module(
 ) {
     private val tracer by config.switch("Tracer")
     private val thickness by config.slider("Thickness", 2, 1, 10)
-    private val color by config.colorPicker("ESP color", Color(Catppuccin.Mocha.Peach.rgba))
+    private val color by config.colorPicker("ESP color", MochaColorScheme.Peach.argb)
     private val depthTest by config.switch("Depth test")
     private val entities = mutableSetOf<Entity>()
 
@@ -60,8 +60,8 @@ object PestESP : Module(
                 }
 
                 val p = e.renderPos.add(-0.5, 1.0, -0.5)
-                extractFrameBox(AABB.unitCubeFromLowerCorner(p), color.rgb, thickness.toFloat(), depthTest)
-                if (tracer) extractTracer(p, color.rgb, thickness.toFloat(), depthTest)
+                extractFrameBox(AABB.unitCubeFromLowerCorner(p), color, thickness.toFloat(), depthTest)
+                if (tracer) extractTracer(p, color, thickness.toFloat(), depthTest)
             }
         }
 

@@ -11,11 +11,12 @@ plugins {
 }
 
 val ver = stonecutter.current.version
+val minecraftVersion = project.property("mod.mc_version").toString()
 val modId = project.property("mod.id").toString()
 val modName = project.property("mod.name").toString()
 val modVer = project.property("mod.version").toString()
 
-version = "$modVer+$ver"
+version = "$modVer+$minecraftVersion"
 base.archivesName = modId
 
 repositories {
@@ -41,7 +42,7 @@ fletchingTable {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:$ver")
+    minecraft("com.mojang:minecraft:$minecraftVersion")
 
     runtimeOnly("devauth".global)
 
@@ -53,14 +54,18 @@ dependencies {
     implementation("hypixel-modapi".global)
     implementation("hypixel-modapi-fabric".global)
 
-    implementation("classgraph".global)
-    implementation("autoupdate".global)
+    implementation("kbus".global)
+    implementation("kommand".global)
     implementation("snowbird".versioned)
     implementation("cascade".versioned)
+    implementation("parallax".versioned)
 
     implementation("skyblock-api".global) {
         capabilities { requireCapability("tech.thatgravyboat:skyblock-api-$ver") }
     }
+
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.ow2.asm:asm-tree:9.9")
 }
 
 loom {

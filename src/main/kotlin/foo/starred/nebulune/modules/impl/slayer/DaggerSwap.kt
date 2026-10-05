@@ -2,8 +2,8 @@ package foo.starred.nebulune.modules.impl.slayer
 
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.annotations.OnlyIn
-import foo.starred.athen.api.location.SkyBlockIsland
-import foo.starred.athen.config.Category
+import foo.starred.athen.api.location.island.impl.PresetSkyBlockIsland as SkyBlockIsland
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.ducks.entity.EntityDuck.Companion.attachedNames
 import foo.starred.athen.events.PlayerEvent
 import foo.starred.athen.events.TickEvent

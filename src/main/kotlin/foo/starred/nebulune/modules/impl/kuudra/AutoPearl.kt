@@ -4,16 +4,16 @@ import foo.starred.athen.annotations.Load
 import foo.starred.athen.annotations.OnlyIn
 import foo.starred.athen.api.kuudra.KuudraAPI
 import foo.starred.athen.api.kuudra.enums.KuudraPhase
-import foo.starred.athen.api.location.SkyBlockIsland
+import foo.starred.athen.api.location.island.impl.PresetSkyBlockIsland as SkyBlockIsland
 import foo.starred.athen.api.scheduling.Scheduler
-import foo.starred.athen.config.Category
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.events.InputEvent
 import foo.starred.athen.modules.Module
 import foo.starred.nebulune.mixin.accessors.InventoryAccessor
 import foo.starred.nebulune.utils.rightClick
 import foo.starred.snowbird.api.client
-import foo.starred.snowbird.handlers.time.client
-import foo.starred.snowbird.handlers.time.start
+import foo.starred.snowbird.api.scheduling.scheduler.extensions.clientTicks as client
+import foo.starred.snowbird.api.scheduling.scheduler.extensions.start
 import foo.starred.snowbird.utils.stripped
 import net.minecraft.world.item.Items
 

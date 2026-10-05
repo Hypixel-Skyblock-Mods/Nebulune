@@ -3,13 +3,13 @@ package foo.starred.nebulune.modules.impl.dungeons
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.api.dungeon.terminals.TerminalAPI
 import foo.starred.athen.api.dungeon.terminals.TerminalType
-import foo.starred.athen.config.Category
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.events.DungeonEvent
 import foo.starred.athen.events.TickEvent
-import foo.starred.athen.events.core.runWhen
+import foo.starred.kbus.extensions.runWhen
 import foo.starred.athen.modules.Module
-import foo.starred.athen.modules.impl.dungeon.terminals.solver.TerminalSolver
-import foo.starred.athen.modules.impl.dungeon.terminals.solver.base.Click
+import foo.starred.athen.modules.impl.dungeon.terminals.solver.TerminalSolvers as TerminalSolver
+import foo.starred.athen.modules.impl.dungeon.terminals.solver.data.TerminalClick as Click
 import foo.starred.athen.modules.impl.dungeon.terminals.solver.impl.*
 import foo.starred.nebulune.accessors.ITerminalAccessor
 import foo.starred.snowbird.api.client
@@ -92,7 +92,7 @@ object AutoTerms : Module(
         last0 = final.slot
         id = TerminalAPI.id
 
-        val fcLeft = TerminalSolver.fcDelay - (System.currentTimeMillis() - TerminalAPI.open)
+        val fcLeft = TerminalSolver.firstClick - (System.currentTimeMillis() - TerminalAPI.open)
         val delay = maxOf(next(), if (fcLeft > 0) fcLeft else 0L)
         next = System.currentTimeMillis() + delay
 
@@ -100,7 +100,7 @@ object AutoTerms : Module(
     }
 
     private fun fn() {
-        if (System.currentTimeMillis() - TerminalAPI.open < TerminalSolver.fcDelay) return
+        if (System.currentTimeMillis() - TerminalAPI.open < TerminalSolver.firstClick) return
 
         val correct = MelodySolver.correct ?: return
         val button = MelodySolver.button ?: return

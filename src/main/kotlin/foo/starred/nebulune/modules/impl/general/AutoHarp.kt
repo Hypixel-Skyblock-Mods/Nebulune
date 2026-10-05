@@ -2,15 +2,15 @@ package foo.starred.nebulune.modules.impl.general
 
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.annotations.OnlyIn
-import foo.starred.athen.api.location.SkyBlockIsland
-import foo.starred.athen.config.Category
+import foo.starred.athen.api.location.island.impl.PresetSkyBlockIsland as SkyBlockIsland
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.events.GuiEvent
 import foo.starred.athen.events.TickEvent
-import foo.starred.athen.events.core.runWhen
+import foo.starred.kbus.extensions.runWhen
 import foo.starred.athen.modules.Module
 import foo.starred.athen.utils.guiClick
 import foo.starred.snowbird.api.client
-import foo.starred.snowbird.handlers.Observable
+import foo.starred.snowbird.api.data.Observable
 import net.minecraft.client.gui.screens.inventory.AbstractContainerScreen
 import net.minecraft.world.inventory.ContainerInput
 import net.minecraft.world.inventory.MenuType

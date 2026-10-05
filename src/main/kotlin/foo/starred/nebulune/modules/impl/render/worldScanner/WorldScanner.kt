@@ -2,11 +2,11 @@ package foo.starred.nebulune.modules.impl.render.worldScanner
 
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.annotations.OnlyIn
-import foo.starred.athen.api.location.SkyBlockIsland
+import foo.starred.athen.api.location.island.impl.PresetSkyBlockIsland as SkyBlockIsland
 import foo.starred.athen.api.messaging.impl.MessagingAPI.mod
-import foo.starred.athen.api.rendering.level.impl.extensions.impl.extractStyledBox
-import foo.starred.athen.api.rendering.level.impl.extensions.impl.extractText
-import foo.starred.athen.config.Category
+import foo.starred.nebulune.utils.extractStyledBox
+import foo.starred.parallax.api.primitives.ParallaxText.string as extractText
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.config.dsl.impl.builders.group.ConfigGroupBuilder
 import foo.starred.athen.events.LocationEvent
 import foo.starred.athen.events.WorldRenderEvent
@@ -36,7 +36,7 @@ object WorldScanner: Module(
         val expandable: ConfigGroupBuilder,
         val enable: () -> Boolean,
         val highlightStyle: () -> Int,
-        val color: () -> Color,
+        val color: () -> Int,
         val tracer: () -> Boolean,
         val displayName: () -> Boolean,
         val displayScale: () -> Float,
@@ -56,7 +56,7 @@ object WorldScanner: Module(
         val highlightStyle by group.selector("Highlight Style", listOf("Outline", "Filled", "Both"), 2)
             .unique(key + "Highlight Style")
 
-        val color by group.colorPicker("ESP Color", defaultColor)
+        val color by group.colorPicker("ESP Color", defaultColor.rgb)
             .unique(key + "ESP Color")
 
         val tracer by group.switch("Tracer", false)
@@ -157,11 +157,11 @@ object WorldScanner: Module(
                     val aabb = AABB(blockPos)
                     val color = grottoConfig.color()
 
-                    extractStyledBox(aabb, color.rgb, grottoConfig.highlightStyle(), depth = false)
-                    if (grottoConfig.tracer()) extractTracer(center, grottoConfig.color().rgb, 2f, false)
+                    extractStyledBox(aabb, color, grottoConfig.highlightStyle(), depth = false)
+                    if (grottoConfig.tracer()) extractTracer(center, grottoConfig.color(), 2f, false)
                     if (grottoConfig.displayName()) extractText("Fairy Grotto",
                         center.add(0.0, 10.0, 0.0),
-                        grottoConfig.color().rgb,
+                        grottoConfig.color(),
                         Color(0, 0, 0, (255 * grottoConfig.displayBackgroundOpacity()).toInt()).rgb,
                         grottoConfig.displayScale(),
                         depth = false,
@@ -171,7 +171,7 @@ object WorldScanner: Module(
                     if (grottoConfigShowNumberOfBlocks) extractText(
                         grotto.third.toString(),
                         center,
-                        grottoConfig.color().rgb,
+                        grottoConfig.color(),
                         Color(0, 0, 0, (255 * grottoConfigShowNumberOfBlocksBackgroundOpacity).toInt()).rgb,
                         grottoConfig.displayScale(),
                         depth = false,
@@ -188,10 +188,10 @@ object WorldScanner: Module(
                 val blockPos = BlockPos(pos.first, pos.second, pos.third)
                 val aabb = AABB(blockPos)
                 val color = structureConfig.color()
-                extractStyledBox(aabb, color.rgb, structureConfig.highlightStyle(), depth = false)
+                extractStyledBox(aabb, color, structureConfig.highlightStyle(), depth = false)
                 //~ if >= 26.2 'blockPos.center' -> 'Vec3.atCenterOf(blockPos)' {
-                if (structureConfig.tracer()) extractTracer(blockPos.center, structureConfig.color().rgb, 2f, false)
-                if (structureConfig.displayName()) extractText(structure.first.displayName, blockPos.center, structureConfig.color().rgb, Color(0, 0, 0, (255 * structureConfig.displayBackgroundOpacity()).toInt()).rgb, structureConfig.displayScale(), depth = false, shadow = true, increase = true)
+                if (structureConfig.tracer()) extractTracer(blockPos.center, structureConfig.color(), 2f, false)
+                if (structureConfig.displayName()) extractText(structure.first.displayName, blockPos.center, structureConfig.color(), Color(0, 0, 0, (255 * structureConfig.displayBackgroundOpacity()).toInt()).rgb, structureConfig.displayScale(), depth = false, shadow = true, increase = true)
                 //~ }
             }
         }

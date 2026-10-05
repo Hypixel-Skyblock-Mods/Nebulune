@@ -7,17 +7,17 @@ import foo.starred.athen.Athen
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.api.messaging.impl.MessagingAPI.mod
 import foo.starred.athen.api.storage.JsonStore
-import foo.starred.athen.config.Category
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.events.InputEvent
 import foo.starred.athen.events.TickEvent
-import foo.starred.athen.events.core.runWhen
+import foo.starred.kbus.extensions.runWhen
 import foo.starred.athen.mixin.accessors.KeyMappingAccessor
 import foo.starred.athen.modules.Module
 import foo.starred.nebulune.utils.leftClick
 import foo.starred.nebulune.utils.rightClick
 import foo.starred.snowbird.api.*
-import foo.starred.snowbird.handlers.parser.parse
-import foo.starred.snowbird.kommand.ICommand
+import foo.starred.snowbird.api.text.parser.impl.parse
+import foo.starred.nebulune.utils.NebuluneCommand as ICommand
 import net.minecraft.client.KeyMapping
 import net.minecraft.world.phys.BlockHitResult
 import tech.thatgravyboat.skyblockapi.api.datatype.DataTypes
@@ -97,11 +97,11 @@ object AutoClicker : Module(
         }
 
         on<InputEvent.Keyboard.Release> {
-            if (keyEvent.key() != `left$key`) return@on
+            if (keyEvent.key() != `left$key`.value) return@on
             KeyMapping.set((client.options.keyAttack as KeyMappingAccessor).boundKey, false)
         }.runWhen(breaking.state)
 
-        command(Athen.modId) {
+        command("athen") {
             "ac" / "add" / "left" {
                 val h = fn() ?: return@invoke "Hold an item to whitelist.".mod()
                 if (h in set1.value) return@invoke "$h is already in left whitelist!".mod()
@@ -168,9 +168,9 @@ object AutoClicker : Module(
         return held?.getData(DataTypes.UUID)?.toString() ?: held?.getData(DataTypes.SKYBLOCK_ID)?.skyblockId ?: held?.hoverName?.string
     }
 
-    private fun Int.fn0(): Boolean {
-        if (!bound) return false
-        return pressed
+    private fun com.mojang.blaze3d.platform.InputConstants.Key.fn0(): Boolean {
+        if (value < 0) return false
+        return foo.starred.snowbird.api.inputs.impl.GenericInputState.pressed(this)
     }
 
     private fun Int.fn1(): Int {

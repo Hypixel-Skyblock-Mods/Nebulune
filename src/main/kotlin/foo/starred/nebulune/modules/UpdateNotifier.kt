@@ -7,16 +7,16 @@ import foo.starred.athen.api.network.http.WebAPI.request
 import foo.starred.athen.api.scheduling.Scheduler
 import foo.starred.athen.events.LocationEvent
 import foo.starred.athen.events.core.on
-import foo.starred.athen.ui.themes.Catppuccin
+import foo.starred.athen.config.theme.impl.catppuccin.MochaColorScheme
 import foo.starred.nebulune.Nebulune
 import foo.starred.snowbird.api.mainThread
-import foo.starred.snowbird.handlers.parser.parse
+import foo.starred.snowbird.api.text.parser.impl.parse
 import foo.starred.snowbird.utils.showTitle
 import kotlin.time.Duration.Companion.seconds
 
 @Priority
 object UpdateNotifier {
-    private const val GITHUB_API = "https://api.github.com/repos/skies-starred/Nebulune/releases"
+    private const val GITHUB_API = "https://api.github.com/repos/Hypixel-Skyblock-Mods/Nebulune/releases"
     private val versionRegex = Regex("""(\d+)\.(\d+)\.(\d+)(?:-r(\d+))?""") // https://regex101.com/r/An6dOq/1
     private var times: Int = 0
     private var latestVersion: Version? = null
@@ -52,7 +52,7 @@ object UpdateNotifier {
 
         mainThread {
             "<aqua>Update available: <red>${latest.display()}".parse().showTitle()
-            "<hover:<${Catppuccin.Mocha.Mauve.argb}>Click to view release!><click:url:https://github.com/skies-starred/Nebulune/releases/tag/${latest.tag}><yellow>Update available for <${Catppuccin.Mocha.Green.argb}>Nebulune: <red>${current.display()} <gray>-> <aqua>${latest.display()}".mod()
+            "<hover:<${MochaColorScheme.Mauve.argb}>Click to view release!><click:url:https://github.com/Hypixel-Skyblock-Mods/Nebulune/releases/tag/${latest.tag}><yellow>Update available for <${MochaColorScheme.Green.argb}>Nebulune: <red>${current.display()} <gray>-> <aqua>${latest.display()}".mod()
         }
     }
 
@@ -69,7 +69,7 @@ object UpdateNotifier {
 
     private fun latest() {
         GITHUB_API.request {
-            onSuccess<JsonArray> { array ->
+            success<JsonArray> { array ->
                 latestVersion = array.mapNotNull { it.asJsonObject["tag_name"]?.asString?.v() }.maxOrNull()
                 fn()
             }

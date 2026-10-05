@@ -5,14 +5,17 @@ package foo.starred.nebulune.modules.impl.general
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.api.messaging.enums.MessagePrefixType
 import foo.starred.athen.api.messaging.impl.MessagingAPI.mod
-import foo.starred.athen.api.rendering.ui.text.vanilla.extensions.sizedText
+import foo.starred.nebulune.utils.textHud
+import foo.starred.nebulune.accessors.EquipmentKeybindsAccessor
+import foo.starred.snowbird.api.inputs.impl.KeyboardInputState
 import foo.starred.athen.api.scheduling.Scheduler
+import foo.starred.snowbird.api.scheduling.scheduler.extensions.start
 import foo.starred.athen.events.GuiEvent
 import foo.starred.athen.events.InputEvent
 import foo.starred.athen.events.PacketEvent
 import foo.starred.athen.events.TickEvent
 import foo.starred.athen.events.core.on
-import foo.starred.athen.events.core.runWhen
+import foo.starred.kbus.extensions.runWhen
 import foo.starred.athen.mixin.accessors.KeyMappingAccessor
 import foo.starred.athen.modules.impl.general.WardrobeKeybinds
 import foo.starred.athen.utils.guiClick
@@ -20,9 +23,9 @@ import foo.starred.nebulune.Nebulune
 import foo.starred.snowbird.api.client
 import foo.starred.snowbird.api.command
 import foo.starred.snowbird.api.mainThread
-import foo.starred.snowbird.handlers.Observable.Companion.and
-import foo.starred.snowbird.handlers.time.client
-import foo.starred.snowbird.kommand.ICommand
+import foo.starred.snowbird.api.data.Observable.Companion.and
+import foo.starred.snowbird.api.scheduling.scheduler.extensions.clientTicks as client
+import foo.starred.nebulune.utils.NebuluneCommand as ICommand
 import foo.starred.snowbird.utils.stripped
 import net.minecraft.client.KeyMapping
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
@@ -42,11 +45,9 @@ object WardrobeHelper : ICommand {
     private val closeDelay by WardrobeKeybinds.config.slider("Close delay", 1, 0, 8, "ticks")
     private val delayVariance by WardrobeKeybinds.config.slider("Max delay variety", 1, 0, 5, "ticks")
 
-    private val hud = WardrobeKeybinds.config.hud("Display text") {
-        if (it) return@hud sizedText("Equipping §7[§c2§7]")
-        if (!swapping) return@hud null
-        val slot = slot0 ?: return@hud null
-        sizedText("Equipping §7[§c${(slot.idx - 36) + 1}§7]")
+    private val hud = WardrobeKeybinds.config.textHud("Display text", "Equipping §7[§c2§7]") {
+        val slot = slot0?.takeIf { swapping } ?: return@textHud null
+        "Equipping §7[§c${slot - 35}§7]"
     }
 
     private val all: List<KeyMapping>
@@ -59,7 +60,7 @@ object WardrobeHelper : ICommand {
             client.options.keyShift
         )
 
-    private var slot0: WardrobeKeybinds.WardrobeSlot? = null
+    private var slot0: Int? = null
     private var swapping: Boolean = false
     private var inMenu: Boolean = false
     private var id: Int = -1
@@ -73,7 +74,7 @@ object WardrobeHelper : ICommand {
                 if (!autoEquip.value) return@int "Enable auto equip in wardrobe keybinds!".mod(MessagePrefixType.ERROR)
 
                 val int = int("slot")
-                val slot = WardrobeKeybinds.wardrobeSlots.find { it.idx == 35 + int } ?: return@int
+                val slot = 35 + int
 
                 slot0 = slot
                 swapping = true
@@ -93,7 +94,7 @@ object WardrobeHelper : ICommand {
             if (!moveEquip && swapping) for (a in all) if ((a as KeyMappingAccessor).boundKey.value == key) return@on cancel()
             if (swapping) return@on
 
-            val slot = WardrobeKeybinds.wardrobeSlots.find { it.value == key } ?: return@on
+            val slot = (WardrobeKeybinds as Any as EquipmentKeybindsAccessor).`nebulune$slotForKey`(KeyboardInputState.vanilla(key)).takeIf { it >= 0 } ?: return@on
 
             slot0 = slot
             swapping = true
@@ -144,11 +145,9 @@ object WardrobeHelper : ICommand {
 
             if (menu.containerId != id) return@on
 
-            val mcSlot = menu.slots.getOrNull(slot.idx)?.takeIf { !it.item.isEmpty } ?: return@on
+            val mcSlot = menu.slots.getOrNull(slot)?.takeIf { !it.item.isEmpty } ?: return@on
             //~ if >= 26.2 'Items.LIME_DYE' -> 'Items.DYE.lime()'
-            if (mcSlot.item.item != Items.LIME_DYE) return@on
-
-            if (!slot.equipped) guiClick(id, slot.idx)
+            if (mcSlot.item.item != Items.LIME_DYE) guiClick(id, slot)
 
             close()
             reset()

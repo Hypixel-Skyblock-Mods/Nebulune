@@ -5,24 +5,28 @@ package foo.starred.nebulune.modules.impl.general
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.api.messaging.enums.MessagePrefixType
 import foo.starred.athen.api.messaging.impl.MessagingAPI.mod
-import foo.starred.athen.api.rendering.ui.text.vanilla.extensions.sizedText
+import foo.starred.nebulune.utils.textHud
+import foo.starred.nebulune.accessors.EquipmentKeybindsAccessor
+import foo.starred.snowbird.api.inputs.impl.KeyboardInputState
 import foo.starred.athen.api.scheduling.Scheduler
+import foo.starred.snowbird.api.scheduling.scheduler.extensions.start
 import foo.starred.athen.events.GuiEvent
 import foo.starred.athen.events.InputEvent
 import foo.starred.athen.events.PacketEvent
 import foo.starred.athen.events.TickEvent
 import foo.starred.athen.events.core.on
-import foo.starred.athen.events.core.runWhen
+import foo.starred.kbus.extensions.runWhen
 import foo.starred.athen.mixin.accessors.KeyMappingAccessor
 import foo.starred.athen.modules.impl.general.LoadoutKeybinds
 import foo.starred.athen.utils.guiClick
+import foo.starred.athen.utils.lore
 import foo.starred.nebulune.Nebulune
 import foo.starred.snowbird.api.client
 import foo.starred.snowbird.api.command
 import foo.starred.snowbird.api.mainThread
-import foo.starred.snowbird.handlers.Observable.Companion.and
-import foo.starred.snowbird.handlers.time.client
-import foo.starred.snowbird.kommand.ICommand
+import foo.starred.snowbird.api.data.Observable.Companion.and
+import foo.starred.snowbird.api.scheduling.scheduler.extensions.clientTicks as client
+import foo.starred.nebulune.utils.NebuluneCommand as ICommand
 import foo.starred.snowbird.utils.stripped
 import net.minecraft.client.KeyMapping
 import net.minecraft.network.protocol.game.ClientboundContainerClosePacket
@@ -41,11 +45,9 @@ object LoadoutHelper : ICommand {
     private val closeDelay by LoadoutKeybinds.config.slider("Close delay", 1, 0, 8, "ticks")
     private val delayVariance by LoadoutKeybinds.config.slider("Max delay variety", 1, 0, 5, "ticks")
 
-    private val hud = LoadoutKeybinds.config.hud("Display text") {
-        if (it) return@hud sizedText("Equipping §7[§c2§7]")
-        if (!swapping) return@hud null
-        val slot = slot0 ?: return@hud null
-        sizedText("Equipping §7[§c${(slot.idx - 14) + 1}§7]")
+    private val hud = LoadoutKeybinds.config.textHud("Display text", "Equipping §7[§c2§7]") {
+        val slot = slot0?.takeIf { swapping } ?: return@textHud null
+        "Equipping §7[§c${((slot - 14) / 9) * 3 + ((slot - 14) % 9) + 1}§7]"
     }
 
     private val all: List<KeyMapping>
@@ -58,7 +60,7 @@ object LoadoutHelper : ICommand {
             client.options.keyShift
         )
 
-    private var slot0: LoadoutKeybinds.LoadoutSlot? = null
+    private var slot0: Int? = null
     private var swapping: Boolean = false
     private var inMenu: Boolean = false
     private var id: Int = -1
@@ -67,12 +69,12 @@ object LoadoutHelper : ICommand {
 
     init {
         command(Nebulune.modId) {
-            "loadout" / int("slot", 1, 9) {
+            "loadout" / int("slot", 1, 12) {
                 if (!LoadoutKeybinds.enabled) return@int "Enable loadout keybinds!".mod(MessagePrefixType.ERROR)
                 if (!autoEquip.value) return@int "Enable auto equip in loadout keybinds!".mod(MessagePrefixType.ERROR)
 
                 val int = int("slot")
-                val slot = LoadoutKeybinds.slots.find { it.index == int - 1 } ?: return@int
+                val slot = 14 + ((int - 1) / 3) * 9 + (int - 1) % 3
 
                 slot0 = slot
                 swapping = true
@@ -92,7 +94,7 @@ object LoadoutHelper : ICommand {
             if (!moveEquip && swapping) for (a in all) if ((a as KeyMappingAccessor).boundKey.value == key) return@on cancel()
             if (swapping) return@on
 
-            val slot = LoadoutKeybinds.slots.find { it.value == key } ?: return@on
+            val slot = (LoadoutKeybinds as Any as EquipmentKeybindsAccessor).`nebulune$slotForKey`(KeyboardInputState.vanilla(key)).takeIf { it >= 0 } ?: return@on
 
             slot0 = slot
             swapping = true
@@ -143,8 +145,10 @@ object LoadoutHelper : ICommand {
 
             if (menu.containerId != id) return@on
 
-            val mcSlot = menu.slots.getOrNull(slot.idx)?.takeIf { !it.item.isEmpty } ?: return@on
-            if (!slot.equipped) guiClick(id, slot.idx)
+            val mcSlot = menu.slots.getOrNull(slot)?.takeIf { !it.item.isEmpty } ?: return@on
+            val lore = mcSlot.item.lore().orEmpty()
+            val equipped = lore.getOrNull(lore.lastIndex - 1)?.stripped()?.isEmpty() == true
+            if (!equipped) guiClick(id, slot)
 
             close()
             reset()

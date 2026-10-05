@@ -4,22 +4,22 @@ package foo.starred.nebulune.modules.impl.general
 
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.annotations.OnlyIn
-import foo.starred.athen.api.location.SkyBlockIsland
-import foo.starred.athen.api.rendering.level.impl.extensions.impl.extractFrameBox
-import foo.starred.athen.api.rendering.ui.text.vanilla.extensions.sizedText
+import foo.starred.athen.api.location.island.impl.PresetSkyBlockIsland as SkyBlockIsland
+import foo.starred.parallax.api.primitives.ParallaxBox.frame as extractFrameBox
+import foo.starred.nebulune.utils.textHud
 import foo.starred.athen.api.scheduling.Scheduler
-import foo.starred.athen.config.Category
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.events.LocationEvent
 import foo.starred.athen.events.MessageEvent
 import foo.starred.athen.events.WorldRenderEvent
 import foo.starred.athen.modules.Module
-import foo.starred.athen.ui.themes.Catppuccin
+import foo.starred.athen.config.theme.impl.catppuccin.MochaColorScheme
 import foo.starred.athen.utils.render.renderBoundingBox
 import foo.starred.athen.utils.render.renderPos
 import foo.starred.nebulune.utils.extractTracer
 import foo.starred.snowbird.api.command
-import foo.starred.snowbird.handlers.parser.parse
-import foo.starred.snowbird.handlers.time.client
+import foo.starred.snowbird.api.text.parser.impl.parse
+import foo.starred.snowbird.api.scheduling.scheduler.extensions.clientTicks as client
 import foo.starred.snowbird.utils.alert
 import foo.starred.snowbird.utils.stripped
 import foo.starred.snowbird.utils.toDurationFromMillis
@@ -59,20 +59,17 @@ object TrevorHelper : Module(
     private val `alert$message` by config.input("Alert message", "<red>Cooldown ended!")
     private val `alert$sound` by config.sound("Alert sound")
 
-    private val hud = config.hud("Cooldown timer") {
-        if (it) return@hud sizedText("Cooldown: §c12.4s")
-        if (cooldown <= 0) return@hud null
+    private val hud = config.textHud("Cooldown timer", "Cooldown: §c12.4s") {
+        if (cooldown <= 0) return@textHud null
         val t = (cooldown - System.currentTimeMillis()).coerceAtLeast(0).toDurationFromMillis(secondsDecimals = 1)
-
-        sizedText("Cooldown: §c$t")
+        "Cooldown: §c$t"
     }
-
     private val colors by config.group("Colors")
-    private val `color$trackable` by colors.colorPicker("Trackable color", Color(Catppuccin.Mocha.Text.argb, true))
-    private val `color$untrackable` by colors.colorPicker("Untrackable color", Color(Catppuccin.Mocha.Green.argb, true))
-    private val `color$undetected` by colors.colorPicker("Undetected color", Color(Catppuccin.Mocha.Blue.argb, true))
-    private val `color$endangered` by colors.colorPicker("Endangered color", Color(Catppuccin.Mocha.Mauve.argb, true))
-    private val `color$elusive` by colors.colorPicker("Elusive color", Color(Catppuccin.Mocha.Yellow.argb, true))
+    private val `color$trackable` by colors.colorPicker("Trackable color", MochaColorScheme.Text.argb)
+    private val `color$untrackable` by colors.colorPicker("Untrackable color", MochaColorScheme.Green.argb)
+    private val `color$undetected` by colors.colorPicker("Undetected color", MochaColorScheme.Blue.argb)
+    private val `color$endangered` by colors.colorPicker("Endangered color", MochaColorScheme.Mauve.argb)
+    private val `color$elusive` by colors.colorPicker("Elusive color", MochaColorScheme.Yellow.argb)
 
     private val animals = setOf(Cow::class, Pig::class, Sheep::class, Chicken::class, Rabbit::class, Horse::class)
     private val startRegex = Regex("\\[NPC] Trevor: You can find your (?<type>\\w+) animal near the .*")
@@ -85,7 +82,7 @@ object TrevorHelper : Module(
             reset()
         }
 
-        on<WorldRenderEvent.Entity.Post> {
+        on<WorldRenderEvent.Entity> {
             if (!mobEsp) return@on
 
             val rarity = rarity ?: return@on
@@ -95,8 +92,8 @@ object TrevorHelper : Module(
             val max = if (entity is Horse) entity.serverMaxHealth / 2f else entity.serverMaxHealth
             if (max != rarity.hp) return@on
 
-            extractFrameBox(entity.renderBoundingBox, rarity.color.rgb, depth = false)
-            if (`esp$tracer`) extractTracer(entity.renderPos, rarity.color.rgb)
+            extractFrameBox(entity.renderBoundingBox, rarity.color, depth = false)
+            if (`esp$tracer`) extractTracer(entity.renderPos, rarity.color)
         }
 
         on<MessageEvent.Chat.Receive> {
@@ -145,7 +142,7 @@ object TrevorHelper : Module(
         val hp: Float
             get() = if (MayorCandidates.DERPY.isActive) derpy else normal
 
-        val color: Color
+        val color: Int
             get() = when (this) {
                 Trackable -> `color$trackable`
                 Untrackable -> `color$untrackable`

@@ -3,13 +3,13 @@ package foo.starred.nebulune.modules.impl.dungeons
 import foo.starred.athen.annotations.Load
 import foo.starred.athen.api.dungeon.terminals.TerminalAPI
 import foo.starred.athen.api.dungeon.terminals.TerminalType
-import foo.starred.athen.config.Category
+import foo.starred.athen.config.dsl.impl.category.ConfigCategory as Category
 import foo.starred.athen.events.DungeonEvent
 import foo.starred.athen.events.TickEvent
-import foo.starred.athen.events.core.runWhen
+import foo.starred.kbus.extensions.runWhen
 import foo.starred.athen.modules.Module
-import foo.starred.athen.modules.impl.dungeon.terminals.solver.TerminalSolver
-import foo.starred.athen.modules.impl.dungeon.terminals.solver.base.Click
+import foo.starred.athen.modules.impl.dungeon.terminals.solver.TerminalSolvers as TerminalSolver
+import foo.starred.athen.modules.impl.dungeon.terminals.solver.data.TerminalClick as Click
 import foo.starred.athen.modules.impl.dungeon.terminals.solver.impl.*
 import foo.starred.nebulune.accessors.ITerminalAccessor
 import foo.starred.snowbird.api.client
@@ -41,7 +41,7 @@ object HoverTerms : Module(
             if (type == TerminalType.MELODY) return@on
 
             val now = System.currentTimeMillis()
-            if (now - TerminalAPI.open < TerminalSolver.fcDelay) return@on
+            if (now - TerminalAPI.open < TerminalSolver.firstClick) return@on
             val solver = solvers[type] as? ITerminalAccessor ?: return@on
 
             val uiScale = 3f * TerminalSolver.`ui$scale`

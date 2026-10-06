@@ -6,7 +6,7 @@ NOTE: You will need Athen installed for Nebulune to work.
 Get Athen at: https://modrinth.com/mod/athen
 
 This maintained fork targets Minecraft **26.1.2, 26.2, and 26.3** with the
-matching official **Athen 0.3.5** jar. Download the Minecraft-specific Nebulune
+matching official **Athen 0.3.6** jar. Download the Minecraft-specific Nebulune
 jar from [GitHub Releases](https://github.com/Hypixel-Skyblock-Mods/Nebulune/releases).
 Fabric API and Fabric Language Kotlin are also required. Use Java 25.
 
@@ -21,7 +21,7 @@ With JDK 25 installed, run:
 ```
 
 The `26.1` source target builds against Minecraft 26.1.2. Jars are collected in
-`build/libs/0.3.2`. Builds include bytecode checks for mixin targets, shadowed
+`build/libs/0.3.3`. Builds include bytecode checks for mixin targets, shadowed
 members, and injection points against the official dependencies. These checks
 do not replace testing the features in a running game.
 

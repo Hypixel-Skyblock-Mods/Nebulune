@@ -7,5 +7,5 @@
   "entrypoints": {
     "preLaunch": ["foo.starred.nebulune.smoke.FabricSmoke"]
   },
-  "depends": {"nebulune": "*", "athen": "0.3.6"}
+  "depends": {"nebulune": "*", "athen": "0.3.7"}
 }

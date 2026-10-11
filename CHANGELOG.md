@@ -1,3 +1,8 @@
+# 0.3.4
+
+- Support official Athen 0.3.7 on Minecraft 26.1.2, 26.2, and 26.3.
+- Preserve this fork's automation, ESP, and Trevor nametag fallback features.
+
 # 0.3.3
 
 - Support official Athen 0.3.6 on Minecraft 26.1.2, 26.2, and 26.3.
